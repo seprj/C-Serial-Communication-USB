@@ -1,0 +1,190 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO.Ports;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Linq.Expressions;
+
+namespace serial
+{
+    public partial class Form1 : Form
+    {
+        byte[] bt = new byte[10];
+        public Form1()
+        {
+            InitializeComponent();
+            getAvailablePorts();
+        }
+
+        void getAvailablePorts()
+        {
+            //Get all ports
+            string[] ports = SerialPort.GetPortNames();
+            comboBox1.Items.AddRange(ports);
+            comboBox1.SelectedIndex = 0;
+            button4.Enabled = false;
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+
+                if (comboBox1.Text == "" || comboBox2.Text == "")
+                {
+                    textBox2.Text = "Please select appropriate setting";
+                }
+
+                else
+                {
+                    //open port
+
+                    serialPort1.PortName = comboBox1.Text;
+                    serialPort1.Open();
+                    serialPort1.BaudRate = Convert.ToInt32(comboBox2.Text);
+                    progressBar1.Value = 100;
+                    button1.Enabled = true;
+                    button2.Enabled = true;
+                    textBox1.Enabled = true;
+                    button3.Enabled = false;
+                    button4.Enabled = true;
+                }
+
+            }
+
+            catch (UnauthorizedAccessException)
+            {
+                textBox2.Text = "Unauthorized Access";
+            }
+
+
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+
+            progressBar1.Value = 0;
+            button1.Enabled = false;
+            button2.Enabled = false;
+            button3.Enabled = true;
+            button4.Enabled = false ;
+            textBox1.Enabled = true;
+
+            try
+            {
+                serialPort1.Close();
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+            //send text to port
+            try {
+            // serialPort1.WriteLine(textBox1.Text);
+            //textBox1.Text = "";
+
+                    if (serialPort1.IsOpen)
+                    {
+                        serialPort1.WriteLine(textBox1.Text + Environment.NewLine);
+                        textBox1.Clear();
+
+                    }
+
+                 }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            //read text serial port
+            try {
+
+                // if (serialPort1.IsOpen)
+                // {
+                // textBox2.Text = serialPort1.ReadExisting();
+                // }
+                if (serialPort1.IsOpen == false)
+                {
+                    serialPort1.PortName = comboBox1.Text;
+                    serialPort1.Open();
+                    button2.Text = "close";
+
+
+                }
+
+                else
+                {
+                    serialPort1.Close();
+                    button2.Text = "open";
+
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+
+            //string data = serialPort1.ReadExisting();
+
+            serialPort1.Read(bt, 0, 10);
+            string s = " ";
+            for (int i = 0; i < 10; i++)
+            	{
+             		 s = s + bt[i].ToString();
+             	}
+            this.Invoke((MethodInvoker)delegate ()
+              {
+
+                 textBox2.Text = textBox2.Text + "-" + s;
+                 textBox2.Text = textBox2.Text + "/" + s;
+
+          	   }
+          );
+        	   serialPort1.DiscardInBuffer();
+
+        }
+
+        private void serialPort1_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            MessageBox.Show("Serial port error : + e.EventType ");
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+    }
+
+
+
+
+
+  }
